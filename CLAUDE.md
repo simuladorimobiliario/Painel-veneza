@@ -13,21 +13,24 @@ Regras de trabalho neste projeto (pedidas pelo Fernando em 2026-08-06):
 2. Manter este arquivo atualizado — o que está pronto, o que falta.
 3. Fazer um commit final ao fim de qualquer sessão de trabalho, mesmo incompleta.
 
-## ⚠️ Duas cópias locais do repo
+## 📁 Pasta oficial do projeto
 
-Existem **duas pastas locais** com o mesmo remoto
-(`github.com/simuladorimobiliario/Painel-veneza`):
+**`C:\Users\Veneza\projetos\veneza-dashboard` é a única pasta de trabalho.**
+É aqui que roda a task do Windows Task Scheduler `VenezaDashboardSync`
+(`connector/scripts/sync-all.mjs`, de hora em hora) com o `.env` real
+(Supabase + ApiMemoria), e é aqui que qualquer sessão do Claude Code deve
+abrir a partir de agora — rode `claude` de dentro desta pasta.
 
-- `C:\Users\Veneza\Documents\GitHub\Painel-veneza` — onde o trabalho com
-  Claude Code acontece (sem `.env`, sem credenciais reais).
-- `C:\Users\Veneza\projetos\veneza-dashboard` — a que a task do Windows
-  Task Scheduler `VenezaDashboardSync` roda de fato, de hora em hora
-  (`connector/scripts/sync-all.mjs`). Tem `.env` real (Supabase + ApiMemoria).
-
-**Commits feitos aqui não chegam sozinhos na cópia de produção** — alguém
-precisa dar `git pull` em `projetos\veneza-dashboard` pra qualquer mudança no
-`connector` valer de verdade no sync agendado. Vale considerar unificar as
-duas em algum momento.
+Histórico: até 2026-08-06 existia uma segunda cópia local em
+`C:\Users\Veneza\Documents\GitHub\Painel-veneza` (sem `.env`, usada só pro
+trabalho com Claude Code), desalinhada da cópia de produção. Foi confirmado
+que ela não tinha nada exclusivo além do `.env`/`.env.local` (esperado), os 2
+commits que só existiam lá (criação e atualização do `CLAUDE.md`) foram
+trazidos pra cá via `git pull` local e enviados ao `origin/main` no GitHub, e
+essa segunda cópia foi descontinuada. **Se alguma sessão futura encontrar
+outra pasta com o mesmo remoto, não presuma que está desatualizada nem
+apague nada — pare e confirme com o Fernando antes**, do mesmo jeito que fizemos
+dessa vez.
 
 ## Pronto
 
