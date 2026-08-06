@@ -1,0 +1,19 @@
+{
+  "name": "veneza-connector",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Conector: le dados da ApiMemoria (Siscom/Firebird) da Veneza e envia para o Supabase",
+  "type": "module",
+  "scripts": {
+    "introspect": "node src/schemaIntrospect.js",
+    "sync-vendas": "node src/syncVendas.js",
+    "sync-recebimentos": "node src/syncRecebimentos.js",
+    "sync-contas-pagar": "node src/syncContasPagar.js",
+    "sync-itens-venda": "node src/syncItensVenda.js",
+    "find-tables": "node src/findTables.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^16.4.5"
+  }
+}
