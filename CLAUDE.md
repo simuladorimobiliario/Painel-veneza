@@ -13,6 +13,22 @@ Regras de trabalho neste projeto (pedidas pelo Fernando em 2026-08-06):
 2. Manter este arquivo atualizado — o que está pronto, o que falta.
 3. Fazer um commit final ao fim de qualquer sessão de trabalho, mesmo incompleta.
 
+## ⚠️ Duas cópias locais do repo
+
+Existem **duas pastas locais** com o mesmo remoto
+(`github.com/simuladorimobiliario/Painel-veneza`):
+
+- `C:\Users\Veneza\Documents\GitHub\Painel-veneza` — onde o trabalho com
+  Claude Code acontece (sem `.env`, sem credenciais reais).
+- `C:\Users\Veneza\projetos\veneza-dashboard` — a que a task do Windows
+  Task Scheduler `VenezaDashboardSync` roda de fato, de hora em hora
+  (`connector/scripts/sync-all.mjs`). Tem `.env` real (Supabase + ApiMemoria).
+
+**Commits feitos aqui não chegam sozinhos na cópia de produção** — alguém
+precisa dar `git pull` em `projetos\veneza-dashboard` pra qualquer mudança no
+`connector` valer de verdade no sync agendado. Vale considerar unificar as
+duas em algum momento.
+
 ## Pronto
 
 ### Connector
@@ -62,9 +78,16 @@ Regras de trabalho neste projeto (pedidas pelo Fernando em 2026-08-06):
    `seed-dividas.mjs`/`seed-reserva.mjs` e pela página `/divida-reserva`) não
    estão em `connector/supabase/schema.sql`. Confirmar se foram criadas
    direto no Supabase e atualizar o arquivo.
-2. **Margem do salão sem taxa de cartão real** (`/saude`): sistema só
-   registra "Getnet crédito/débito" sem bandeira, e existe uma adquirente
-   "VERO" não cadastrada em `taxas_adquirente`.
+2. **Bandeira de cartão não rastreada** (`/margem-canal`, `/saude`): o
+   `taxaCartaoPct()` sempre busca a modalidade "Visa/Master" na tabela
+   `taxas_adquirente`, mesmo quando já existem taxas cadastradas pra Elo/Amex
+   (mais caras) — porque `recebimentos` não guarda a bandeira do cartão, só
+   `tipo_cartao_tef` (débito/crédito) e `adquirente_tef` (GETNET/VERO). Isso
+   tende a subestimar levemente o custo de cartão.
+   ~~Adquirente "VERO" sem taxa cadastrada~~ — **resolvido em 2026-08-05**:
+   Fernando cadastrou taxas reais para Getnet e Banricompras (mapeado de
+   VERO) em `taxas_adquirente`, com valores diferentes por modalidade
+   (hoje ~1,34% de taxa média efetiva no canal Salão, jan–mai/2026).
 3. **`/margem-canal` com janela fixa hardcoded** (jan–mai/2026) — não é
    dinâmica.
 4. **Curva ABC pode ter ruído**: custo cadastrado por caixa/pacote (não por
@@ -80,3 +103,27 @@ Regras de trabalho neste projeto (pedidas pelo Fernando em 2026-08-06):
    estiver ligada, os dados param de atualizar. Nada rodando na nuvem.
 9. **`itens_venda.custo_unit` é custo atual do produto**, não snapshot
    histórico — margem de vendas antigas muda se o custo cadastrado mudar hoje.
+10. **Alguns produtos na Curva ABC têm custo cadastrado por caixa/pacote, não
+    por dose/unidade** — confirmado em 2026-08-06: caipirinhas (todos os
+    sabores) e Suco Tropical mostram custo médio agrupado em R$21–22,
+    independente do sabor, sinal claro de custo lançado por
+    garrafa/lote. Gera margem negativa impossível (custo > preço de venda).
+11. **`itens_venda` de um pedido específico costuma não bater com o valor
+    total do pedido** (`vendas.valor`) — parecem faltar linhas de item em
+    muitos pedidos individuais. O total agregado por mês/canal (usado em
+    `/margem-canal` e `/curva-abc`) parece internamente consistente (CMV%
+    plausível), mas não dá pra confiar no detalhe de um pedido isolado.
+12. **Canais de origem não mapeados**: além de Salão/Site/iFood/Telefone,
+    aparecem valores de `os_site` como "AUTOATEND" e "AUTOATENDIMENTO"
+    (provavelmente autoatendimento/totem) que `normalizeCanal()` não
+    reconhece — viram canais próprios pequenos em `/margem-canal` em vez de
+    caírem numa categoria conhecida.
+13. **Sync sem trilha de auditoria**: `sync-all.mjs` roda via Task Scheduler
+    mas não grava log em arquivo (`stdio: 'inherit'` se perde numa tarefa
+    agendada sem console) e o histórico de execuções do Task Scheduler está
+    desabilitado nesta máquina — só dá pra ver o resultado da ÚLTIMA
+    execução, nenhuma anterior. Se um sync falhar de madrugada, ninguém fica
+    sabendo. Também vale saber que `sincronizado_em` só atualiza quando uma
+    linha é inserida pela primeira vez (upsert não reenvia essa coluna em
+    updates), então uma tabela com timestamp mais antigo não significa
+    necessariamente que o sync falhou.
